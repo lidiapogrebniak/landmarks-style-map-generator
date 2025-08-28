@@ -1,0 +1,29 @@
+
+    :root{--bg:#0f1724;--ink: #2b2f36; --bgBoard: #f6f7f9;--hex: #ffffff;--stroke: #e3e6ea;--card:#0b1220;--accent:#ffd166;--muted:#94a3b8;--white:#eef2ff;}
+    body{font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:linear-gradient(180deg,#071026 0%, #0b1020 100%); color:var(--white); margin:0; padding:28px;}
+    .wrap{max-width:980px;margin:0 auto;display:grid;gap:20px}
+    header h1{margin:0;font-size:20px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); padding:16px; border-radius:12px}
+    label{font-size:13px;color:var(--muted)}
+    textarea,input,select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--white);margin-top:6px;margin-bottom:12px}
+    button{background:var(--accent);color:#04111a;border:none;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+    .controls{display:flex;gap:8px}
+
+
+    .hex-grid{
+      background: radial-gradient(1200px 800px at 50% 40%, #f9fafb 0, #eef1f5 55%, #e7ecf2 100%);
+      color: var(--ink);
+    }
+
+    .board{
+      background: var(--bgBoard);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.05) inset;
+      padding: 18px;
+    }
+
+    svg{width:100%;height:auto;display:block}
+    .hex{fill:var(--hex);stroke:var(--stroke);stroke-width:1.5}
+.word-hex{
+  fill: var(--ink);
+}

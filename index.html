@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Генератор ключей для Landmarks</title>
+  <link rel="stylesheet" href="styles.css"></style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <header class="card">
+        <h1>Генератор ключей для <em>Landmarks</em></h1>
+        <div class="small">Быстро создаёт новый «ключ» — расположение локаций + три стартовых слова. Настройте словарь, размер и правила, нажмите «Сгенерировать».</div>
+      </header>
+
+      <section class="card" style="margin-top:12px">
+        <div style="margin-top:8px">
+          <label>Банк слов</label>
+          <textarea id="wordBank" rows="6">Камень
+Ограждение
+Свет
+Тайна
+Золото
+Вода
+Древний
+Высокий
+Торговля
+Огонь
+Путь
+Ключ</textarea>
+
+          <div class="options">
+            <label><input type="checkbox" id="allowAdjacency" checked> Разрешить соседние локации (чтобы генерировать связные зоны)</label>
+            <label><input type="checkbox" id="avoidSymmetry"> Избегать симметричных карт</label>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button id="generateBtn">Сгенерировать</button>
+            <button id="resetBtn">Сброс</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:12px">
+        <h3>Результат</h3>
+        <div class="row">
+          <div style="width:160px;text-align:right">
+            <div class="small">Экспорт</div>
+            <div class="export">
+
+            </div>
+          </div>
+        </div>
+
+        <div class="hex-grid" style="margin-top:12px">
+          <div class="board">
+            <svg id="hexmap" viewBox="0 0 600 600" aria-label="hex-grid"></svg>
+          </div>
+        </div>
+      </section>
+
+      <footer class="small">Совет: храните сгенерированные ключи в документе — так получится большой пул сценариев для многократных партий.</footer>
+    </div>
+
+  </div>
+
+
+  <script type="module">
+
+import { GridGenerator } from './gridGenerator.js';
+import { GAME_CONFIG, LOCATION_IMAGES, LocationType } from './constants.js';
+    // --- geometry helpers (pointy-top axial) ---
+    const W = Math.sqrt(3) * GAME_CONFIG.HEX_RADIUS_IN_PIXEL; // width of a single hex
+    const H = 2 * GAME_CONFIG.HEX_RADIUS_IN_PIXEL;            // height of a single hex
+    const VERT = 3/4 * H;          // vertical step
+
+    // --- Utility ---
+    function randInt(n){return Math.floor(Math.random()*n)}
+    function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=randInt(i+1);[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
+    function parseLines(text){return text.split('\n').map(s=>s.trim()).filter(Boolean)}
+
+    // Elements
+    const wordsTA = document.getElementById('wordBank')
+    const mapContainer = document.getElementById('hexGrid')
+    const generateBtn = document.getElementById('generateBtn')
+
+    const allowAdj = document.getElementById('allowAdjacency')
+    const avoidSym = document.getElementById('avoidSymmetry')
+
+    const svg = document.getElementById('hexmap');
+
+    function axialToPixel(q, r) {
+      const x = 3./2 * q * GAME_CONFIG.HEX_RADIUS_IN_PIXEL  + 300; // center near middle
+      const y = W * (1./2 * q + r) + 300;
+      return {x, y};
+    }
+
+    function hexPath(cx, cy) {
+      const pts = [];
+      for (let i = 0; i < 6; i++){
+        const angle = Math.PI/180 * (60 * i - 30);
+        const x = cx + GAME_CONFIG.HEX_RADIUS_IN_PIXEL * Math.sin(angle);
+        const y = cy + GAME_CONFIG.HEX_RADIUS_IN_PIXEL * Math.cos(angle);
+        pts.push([x,y]);
+      }
+      return 'M' + pts.map(p => p.join(',')).join(' L ') + ' Z';
+    }
+
+    // --- data generation ---
+
+    const gridGenerator = new GridGenerator(GAME_CONFIG.FIELD_RADIUS);
+    const cells = await gridGenerator.generateCellsWithLocations();
+
+    export const createSVGElement = (type, attributes = {}) => {
+        const element = document.createElementNS('http://www.w3.org/2000/svg', type);
+        Object.entries(attributes).forEach(([key, value]) => {
+            element.setAttribute(key, value);
+        });
+        return element;
+    };
+    // --- draw ---
+    function renderGrid(){
+      svg.innerHTML = '';
+
+      for(const c of cells){
+        const {x,y} = axialToPixel(c.q,c.r);
+        const g = createSVGElement ('g', {'filter':'url(#soft)'});
+
+        const poly = createSVGElement ('path',{
+          'd': hexPath(x,y),
+          'class':'hex'
+        });
+
+        let textContent = `${c.getLocation().getType()}`;
+        if (c.getLocation().isWord()) {
+          poly.classList.add('word-hex');
+          textContent = c.getLocation().getWord();
+        }
+        g.appendChild(poly);
+
+        // tooltip title
+        const title = createSVGElement('title', {
+          textContent: textContent
+        });
+
+        g.appendChild(title);
+
+        if (c.getLocation().getType() !== LocationType.EMPTY
+          && c.getLocation().getType() !== LocationType.WORD) {
+          const location = createSVGElement('image', {
+            'width': H,
+            'height': W,
+            'x': x - H/2,
+            'y': y - W/2
+          });
+
+          location.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', LOCATION_IMAGES[c.getLocation().getType()]);
+
+          g.appendChild(location);
+        }
+        svg.appendChild(g);
+      }
+    }
+
+    function render(){
+      try {
+          renderGrid();
+      } catch (error) {
+          console.error('Error rendering grid:', error);
+          // Add user-friendly error display
+      }
+    }
+    // --- Buttons ---
+    //generateBtn.addEventListener('click', generateMap)
+
+    // initial demo
+    render();
+  </script>
+</body>
+</html>

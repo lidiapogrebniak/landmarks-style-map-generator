@@ -1,0 +1,3 @@
+{"javascript.suggest.autoImports": true,
+"javascript.updateImportsOnFileMove.enabled": "always",
+"javascript.validate.enable": true}
