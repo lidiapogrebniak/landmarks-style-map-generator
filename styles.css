@@ -25,5 +25,5 @@
     svg{width:100%;height:auto;display:block}
     .hex{fill:var(--hex);stroke:var(--stroke);stroke-width:1.5}
 .word-hex{
-  fill: var(--ink);
+  fill: transparent;
 }

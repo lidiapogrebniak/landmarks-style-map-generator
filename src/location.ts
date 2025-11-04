@@ -1,41 +1,43 @@
-import { LocationType } from './constants.js';
+import { LocationType, LocationTypeValue } from './constants.js';
 
 export class Location {
-    constructor(type, word = null) {
-        if (Object.values(LocationType).includes(type)) {
-            this.type = type;
-        } else {
-            throw new Error('Invalid location type');
-        }
-        this.word = word; // Initialize word to null
+    private type: LocationTypeValue;
+    private word: string | null;
 
+    constructor(type: LocationTypeValue, word: string | null = null) {
+        this.type = type;
+        this.word = word;
     }
 
-    isBad(){
+    isBad(): boolean {
         return this.type === LocationType.CURSE ||
             this.type === LocationType.TRAP;
     }
 
-    isGood(){
+    isGood(): boolean {
         return this.type === LocationType.TREASURE ||
             this.type === LocationType.AMULET ||
             this.type === LocationType.WATER ||
             this.type === LocationType.EXIT;
     }
-    isEmpty(){
+
+    isEmpty(): boolean {
         return this.type === LocationType.EMPTY;
     }
-    isWord(){
+
+    isWord(): boolean {
         return this.type === LocationType.WORD;
     }
-    getWord() {
+
+    getWord(): string {
         if (this.isWord()) {
-            return this.word;
+            return this.word!;
         } else {
             throw new Error('Location is not a word');
         }
     }
-    setWord(newWord) {
+
+    setWord(newWord: string): void {
         if (this.isWord()) {
             this.word = newWord;
         } else {
@@ -43,23 +45,17 @@ export class Location {
         }
     }
 
-    getType() {
+    getType(): LocationTypeValue {
         return this.type;
     }
 
-    setType(newType) {
-        if (Object.values(LocationType).includes(newType)) {
-            this.type = newType;
-        } else {
-            throw new Error('Invalid location type');
-        }
+    setType(newType: LocationTypeValue): void {
+        this.type = newType;
     }
 
-    toString() {
+    toString(): string {
         if (this.isWord()) {
             return `Location(WORD: ${this.word})`;
-        } else {
-            return `Location(${this.type})`;
         }
         return `Location(${this.type})`;
     }
