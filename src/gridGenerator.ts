@@ -46,10 +46,10 @@ export class GridGenerator {
         const wordBank = await fetch("../wordBank.json").then(response => response.json());
 
         let currentWordHash = emitter.emitFirst()!;
-        let neighbors = [];
+        let neighbors:[string, Cell][] = [];
 
         for (let i = 0; i < wordCount; i++) {
-            const wordCell = cellsMap.get(currentWordHash);
+            const wordCell:Cell = cellsMap.get(currentWordHash)!;
 
             wordSet.add(currentWordHash);
 
@@ -81,8 +81,12 @@ export class GridGenerator {
         neighbors.push(...this.getNeighbors(wordCell.getQ(), wordCell.getR(), cellsMap));
         neighbors = neighbors.filter(([neighborHash]) => !wordSet.has(neighborHash));
 
+        if (!neighbors || neighbors.length === 0) {
+            throw new Error("No valid neighbors found");
+        }
+
         const randomNeighborIndex = Math.floor(Math.random() * neighbors.length);
-        const [nextWordNeighborHash] = neighbors[randomNeighborIndex];
+        const [nextWordNeighborHash] = neighbors[randomNeighborIndex]!;
         currentWordHash = nextWordNeighborHash;
         emitter.emitCertain(currentWordHash);
     }
@@ -95,7 +99,7 @@ export class GridGenerator {
 
         while (true) {
             const randomIndex = Math.floor(Math.random() * words.length);
-            const word = words[randomIndex];
+            const word = words[randomIndex]!;
             const isUsed = Array.from(wordSet).some(hash => {
                 const cell = cellsMap.get(hash);
                 return cell?.getLocation().getWord() === word;
@@ -158,11 +162,23 @@ export class GridGenerator {
         return neighbors;
     }
 
-    isGoodLocationValid(hash:string, cellsMap: Map<string, Cell>, goodSet: Set<string>): boolean {
+    isGoodLocationValid(cell:Cell,
+        cellsMap: Map<string, Cell>,
+        goodSet: Set<string>,
+        wordSet:Set<string>
+    ): boolean {
         let isValid = true;
-        const cell = cellsMap.get(hash);
+
         for (let g of goodSet) {
-            const distance = this.distance(cell, cellsMap.get(g));
+            const distance = this.distance(cell, cellsMap.get(g)!);
+            if (distance < GAME_CONFIG.GOOD_LOCATION_MIN_DISTANCE) {
+                isValid = false;
+                break;
+            }
+        }
+
+        for (let w of wordSet) {
+            const distance = this.distance(cell, cellsMap.get(w)!);
             if (distance < GAME_CONFIG.GOOD_LOCATION_MIN_DISTANCE) {
                 isValid = false;
                 break;
@@ -195,10 +211,10 @@ export class GridGenerator {
                 while (goodSet.size < BASIC_LOCATION_COUNT.GOOD_TOTAL) {
                     const hash = emitter.emit();
                     if (!hash) break;
-
-                    if (this.isGoodLocationValid(hash, cellsMap, goodSet)) {
+                    const cell:Cell = cellsMap.get(hash)!;
+                    if (this.isGoodLocationValid(cell, cellsMap, goodSet, wordSet)) {
                         goodSet.add(hash);
-                        this.assignGoodLocationType(cellsMap.get(hash), goodSet.size);
+                        this.assignGoodLocationType(cell, goodSet.size);
                     } else {
                         emitter.rollback();
                     }
@@ -210,7 +226,7 @@ export class GridGenerator {
                     if (!hash) break;
 
                     badSet.add(hash);
-                    this.assignBadLocationType(cellsMap.get(hash), badSet.size);
+                    this.assignBadLocationType(cellsMap.get(hash)!, badSet.size);
                 }
 
                 // Validate reachability

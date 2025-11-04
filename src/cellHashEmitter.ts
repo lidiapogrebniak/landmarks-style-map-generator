@@ -18,7 +18,7 @@ export class CellHashEmitter {
         const hash = this.cellHashes[this.currentIndex];
         this.usedIndices.push(this.currentIndex);
         this.currentIndex++;
-        return hash;
+        return hash!;
     }
 
     rollback(): void {
@@ -29,7 +29,7 @@ export class CellHashEmitter {
         this.cellHashes.push(
             this.cellHashes.splice(
                 this.currentIndex,
-                1)[0]
+                1)[0]!
         );
     }
 
@@ -46,7 +46,7 @@ export class CellHashEmitter {
     shuffle(): void {
         for (let i = this.cellHashes.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [this.cellHashes[i], this.cellHashes[j]] = [this.cellHashes[j], this.cellHashes[i]];
+            [this.cellHashes[i]!, this.cellHashes[j]!] = [this.cellHashes[j]!, this.cellHashes[i]!];
         }
     }
 
@@ -56,7 +56,7 @@ export class CellHashEmitter {
         }
         this.currentIndex = 1; // Move index forward since we're emitting the first
         this.usedIndices.push(0);
-        return this.cellHashes[0];
+        return this.cellHashes[0]!;
     }
 
     emitCertain(hash: string): boolean {
@@ -64,8 +64,8 @@ export class CellHashEmitter {
         if (this.currentIndex < this.cellHashes.length) {
             const foundIndex = this.cellHashes.indexOf(hash);
             if (foundIndex >= this.currentIndex) {
-                [this.cellHashes[this.currentIndex], this.cellHashes[foundIndex]] =
-                [this.cellHashes[foundIndex], this.cellHashes[this.currentIndex]];
+                [this.cellHashes[this.currentIndex]!, this.cellHashes[foundIndex]!] =
+                [this.cellHashes[foundIndex]!, this.cellHashes[this.currentIndex]!];
             }
         }
 
