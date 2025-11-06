@@ -58,10 +58,9 @@ export class GridGenerator {
                 .setWord(this.pickRandomWord(wordBank, wordSet, cellsMap));
 
             if(i < wordCount - 1) {
-                this.updateNeighborsAndPickNextWord(
+                currentWordHash = this.updateNeighborsAndPickNextWordCell(
                     neighbors,
                     wordSet,
-                    currentWordHash,
                     emitter,
                     wordCell,
                     cellsMap
@@ -70,13 +69,12 @@ export class GridGenerator {
         }
     }
 
-    updateNeighborsAndPickNextWord(
+    updateNeighborsAndPickNextWordCell(
         neighbors: [string, Cell][],
         wordSet: Set<string>,
-        currentWordHash: string,
         emitter: CellHashEmitter,
         wordCell: Cell,
-        cellsMap: Map<string, Cell>): void
+        cellsMap: Map<string, Cell>): string
     {
         neighbors.push(...this.getNeighbors(wordCell.getQ(), wordCell.getR(), cellsMap));
         neighbors = neighbors.filter(([neighborHash]) => !wordSet.has(neighborHash));
@@ -87,8 +85,8 @@ export class GridGenerator {
 
         const randomNeighborIndex = Math.floor(Math.random() * neighbors.length);
         const [nextWordNeighborHash] = neighbors[randomNeighborIndex]!;
-        currentWordHash = nextWordNeighborHash;
-        emitter.emitCertain(currentWordHash);
+        emitter.emitCertain(nextWordNeighborHash);
+        return nextWordNeighborHash;
     }
 
     pickRandomWord(wordBank: { words: string[] }, wordSet: Set<string>, cellsMap: Map<string, Cell>): string {
