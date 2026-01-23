@@ -73,4 +73,36 @@ export class CellHashEmitter {
         this.currentIndex++;
         return true;
     }
+
+    emitWithWeight(weightMap: Map<string, number>): string | undefined {
+        if (this.currentIndex >= this.cellHashes.length) {
+            return undefined; // No more hashes to emit
+        }
+
+        const selectedHash = this.weightedRandomChoice(weightMap);
+        this.emitCertain(selectedHash!);
+        return selectedHash;
+    }
+
+    weightedRandomChoice(weightedHashes:Map<string,number>):string | undefined {
+
+        const totalProbabilty = weightedHashes.values().reduce(
+            (a, b) => a + b, 0
+        );
+
+        const rnd = Math.random() * totalProbabilty;
+        let acc:number = 0;
+        for (const entry of weightedHashes.entries()) {
+            acc += entry[1];
+            if (rnd <= acc) {
+                return entry[0];
+            }
+        }
+
+        return undefined;
+      }
+
+      getRemainingHashes(): string[] {
+        return this.cellHashes.slice(this.currentIndex);
+      }
 }

@@ -54,6 +54,10 @@ export class Cell {
         }
     }
 
+    isLocationEmpty(): boolean {
+        return this.location.getType() === LocationType.EMPTY;
+    }
+
     cleanLocation(): void {
         this.location = new Location(LocationType.EMPTY);
     }

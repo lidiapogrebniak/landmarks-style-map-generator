@@ -29,6 +29,10 @@ export class Location {
         return this.type === LocationType.WORD;
     }
 
+    isTreasure(): boolean {
+        return this.type === LocationType.TREASURE;
+    }
+
     getWord(): string {
         if (this.isWord()) {
             return this.word!;
