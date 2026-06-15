@@ -11,14 +11,19 @@
     <div>
       <header class="card">
         <h1>Генератор ключей для <em>Landmarks</em></h1>
-        <div class="small">Быстро создаёт новый «ключ» — расположение локаций + три стартовых слова. Настройте словарь, размер и правила, нажмите «Сгенерировать».</div>
+        <div class="small">Быстро создаёт новый «ключ» — расположение локаций + три стартовых слова.</div>
       </header>
 
       <section class="card" style="margin-top:12px">
         <div style="margin-top:8px">
-
+          <input id="basic" name="complexity" checked value="basic" type="radio">
+            <label for="basic">Новичок</label>
+          </input>
+          <input id="advanced" name="complexity" type="radio" value="advanced">
+            <label for="advanced">Профи</label>
+          </input>
           <div style="display:flex;gap:8px;margin-top:6px">
-            <button id="generateBtn">Generate new</button>
+            <button id="generateBtn">Сгенерировать</button>
           </div>
         </div>
       </section>
@@ -28,7 +33,8 @@
 
         <div class="hex-grid" style="margin-top:12px">
           <div class="board">
-            <svg id="hexmap" viewBox="0 0 600 620" aria-label="hex-grid"></svg>
+            <p id="noneGeneratedText"> Нажмите "Сгенерировать", чтобы создать новый ключ</p>
+            <svg id="hexmap" viewBox="0 0 600 620" aria-label="hex-grid" style="display: none;"></svg>
           </div>
         </div>
       </section>
@@ -40,8 +46,8 @@
 
   <script type="module">
 
-import { GridGenerator } from './gridGenerator.js';
-import { GAME_CONFIG, LOCATION_IMAGES, LocationType } from './dist/constants.js';
+import { GridGenerator } from './dist/gridGenerator.js';
+import { GAME_CONFIG, LOCATION_IMAGES, LocationType, BasicLocationCount, AdvancedLocationCount } from './dist/constants.js';
     // --- geometry helpers (pointy-top axial) ---
     const W = Math.sqrt(3) * GAME_CONFIG.HEX_RADIUS_IN_PIXEL; // width of a single hex
     const H = 2 * GAME_CONFIG.HEX_RADIUS_IN_PIXEL;            // height of a single hex
@@ -53,13 +59,16 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType } from './dist/constants.js'
     function parseLines(text){return text.split('\n').map(s=>s.trim()).filter(Boolean)}
 
     // Elements
-    const wordsTA = document.getElementById('wordBank')
+
+    const complexityInput = document.querySelector('input[name="complexity"]:checked');
+
     const mapContainer = document.getElementById('hexGrid')
     const generateBtn = document.getElementById('generateBtn')
 
     const allowAdj = document.getElementById('allowAdjacency')
     const avoidSym = document.getElementById('avoidSymmetry')
 
+    const noneGeneratedText = document.getElementById('noneGeneratedText');
     const svg = document.getElementById('hexmap');
 
     function axialToPixel(q, r) {
@@ -79,10 +88,6 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType } from './dist/constants.js'
       return 'M' + pts.map(p => p.join(',')).join(' L ') + ' Z';
     }
 
-    // --- data generation ---
-
-    const gridGenerator = new GridGenerator(GAME_CONFIG.FIELD_RADIUS);
-    const cells = await gridGenerator.generateCellsWithLocations();
 
     export const createSVGElement = (type, attributes = {}) => {
         const element = document.createElementNS('http://www.w3.org/2000/svg', type);
@@ -92,8 +97,23 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType } from './dist/constants.js'
 
         return element;
     };
+
+    async function generateMap() {
+      const complexityValue = document.querySelector('input[name="complexity"]:checked').value;
+      const complexity = complexityValue === 'advanced' ? new AdvancedLocationCount() : new BasicLocationCount();
+      const gridGenerator = new GridGenerator(GAME_CONFIG, complexity);
+      const cells = await gridGenerator.generateCellsWithLocations();
+
+      try {
+        renderGrid(cells);
+      } catch (error) {
+        console.error('Error rendering grid:', error);
+      }
+    }
     // --- draw ---
-    function renderGrid(){
+    function renderGrid(cells){
+      noneGeneratedText.style.display = 'none';
+      svg.style.display = 'block';
       svg.innerHTML = '';
       let words = '';
 
@@ -165,19 +185,9 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType } from './dist/constants.js'
       svg.appendChild(textElement);
     }
 
-    function render(){
-      try {
-          renderGrid();
-      } catch (error) {
-          console.error('Error rendering grid:', error);
-          // Add user-friendly error display
-      }
-    }
     // --- Buttons ---
-    //generateBtn.addEventListener('click', generateMap)
+    generateBtn.addEventListener('click', generateMap)
 
-    // initial demo
-    render();
   </script>
 </body>
 </html>
