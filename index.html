@@ -16,42 +16,15 @@
 
       <section class="card" style="margin-top:12px">
         <div style="margin-top:8px">
-          <label>Банк слов</label>
-          <textarea id="wordBank" rows="6">Камень
-Ограждение
-Свет
-Тайна
-Золото
-Вода
-Древний
-Высокий
-Торговля
-Огонь
-Путь
-Ключ</textarea>
-
-          <div class="options">
-            <label><input type="checkbox" id="allowAdjacency" checked> Разрешить соседние локации (чтобы генерировать связные зоны)</label>
-            <label><input type="checkbox" id="avoidSymmetry"> Избегать симметричных карт</label>
-          </div>
 
           <div style="display:flex;gap:8px;margin-top:6px">
-            <button id="generateBtn">Сгенерировать</button>
-            <button id="resetBtn">Сброс</button>
+            <button id="generateBtn">Generate new</button>
           </div>
         </div>
       </section>
 
       <section class="card" style="margin-top:12px">
         <h3>Результат</h3>
-        <div class="row">
-          <div style="width:160px;text-align:right">
-            <div class="small">Экспорт</div>
-            <div class="export">
-
-            </div>
-          </div>
-        </div>
 
         <div class="hex-grid" style="margin-top:12px">
           <div class="board">
@@ -60,7 +33,6 @@
         </div>
       </section>
 
-      <footer class="small">Совет: храните сгенерированные ключи в документе — так получится большой пул сценариев для многократных партий.</footer>
     </div>
 
   </div>
@@ -68,7 +40,7 @@
 
   <script type="module">
 
-import { GridGenerator } from './dist/gridGenerator.js';
+import { GridGenerator } from './gridGenerator.js';
 import { GAME_CONFIG, LOCATION_IMAGES, LocationType } from './dist/constants.js';
     // --- geometry helpers (pointy-top axial) ---
     const W = Math.sqrt(3) * GAME_CONFIG.HEX_RADIUS_IN_PIXEL; // width of a single hex
