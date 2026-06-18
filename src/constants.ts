@@ -21,7 +21,7 @@ export const LOCATION_IMAGES: Partial<Record<LocationTypeValue, string>> = {
     [LocationType.CURSE]: './images/curse.png'
 } as const;
 
-interface BasicLocationCount {
+export interface LocationCount {
     WORD_COUNT: number;
     WATER_COUNT: number;
     TREASURE_COUNT: number;
@@ -33,23 +33,69 @@ interface BasicLocationCount {
     BAD_TOTAL: number;
 }
 
-export const BASIC_LOCATION_COUNT: BasicLocationCount = {
-    WORD_COUNT: 3,
-    WATER_COUNT: 3,
-    TREASURE_COUNT: 3,
-    AMULET_COUNT: 1,
-    CURSE_COUNT: 3,
-    TRAP_COUNT: 4,
-    EXIT_COUNT: 1,
+abstract class BaseLocationCount implements LocationCount {
+    abstract get WATER_COUNT(): number;
+    abstract get TREASURE_COUNT(): number;
+    abstract get CURSE_COUNT(): number;
+    abstract get TRAP_COUNT(): number;
+
+    get WORD_COUNT(): number {
+        return 3;
+    }
+    get AMULET_COUNT(): number {
+        return 1;
+    }
+    get EXIT_COUNT(): number {
+        return 1;
+    }
+
     get GOOD_TOTAL() {
         return this.WATER_COUNT + this.TREASURE_COUNT + this.AMULET_COUNT + this.EXIT_COUNT;
-    },
+    }
     get BAD_TOTAL() {
         return this.CURSE_COUNT + this.TRAP_COUNT;
     }
 };
 
-interface GameConfig {
+export class BasicLocationCount extends BaseLocationCount {
+    get WATER_COUNT() {
+        return 3;
+    }
+    get TREASURE_COUNT() {
+        return 3;
+    }
+    get CURSE_COUNT() {
+        return 3;
+    }
+    get TRAP_COUNT() {
+        return 4;
+    }
+
+    private constructor() {
+        super();
+    }
+}
+
+export class AdvancedLocationCount extends BaseLocationCount {
+    get WATER_COUNT() {
+        return 4;
+    }
+    get TREASURE_COUNT() {
+        return 4;
+    }
+    get CURSE_COUNT() {
+        return 5;
+    }
+    get TRAP_COUNT() {
+        return 6;
+    }
+
+    private constructor() {
+        super();
+    }
+}
+
+export interface GameConfig {
     GRID_RADIUS_IN_HEX: number;
     HEX_RADIUS_IN_PIXEL: number;
     GOOD_LOCATION_MIN_DISTANCE: number;
@@ -58,5 +104,5 @@ interface GameConfig {
 export const GAME_CONFIG: GameConfig = {
     GRID_RADIUS_IN_HEX: 3,
     HEX_RADIUS_IN_PIXEL: 48,
-    GOOD_LOCATION_MIN_DISTANCE: 2,
+    GOOD_LOCATION_MIN_DISTANCE: 1,
 } as const;

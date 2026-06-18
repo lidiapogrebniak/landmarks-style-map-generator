@@ -1,16 +1,28 @@
 import {
-    BASIC_LOCATION_COUNT,
+    LocationCount,
     GAME_CONFIG,
     LocationType,
+    GameConfig,
 } from "./constants.js";
 import { Location } from "./location.js";
 import { Cell } from "./cell.js";
 import { CellHashEmitter } from "./cellHashEmitter.js";
 
 export class GridGenerator {
+    private gameConfig: GameConfig;
+    private locationCount: LocationCount;
+
+    constructor(
+        private gConfig: GameConfig,
+        private lCount: LocationCount
+    ) {
+        this.gameConfig = gConfig;
+        this.locationCount = lCount;
+    }
+
     generateCellsMap(): Map<string, Cell> {
         const cellsMap = new Map<string, Cell>();
-        const R = GAME_CONFIG.GRID_RADIUS_IN_HEX;
+        const R = this.gameConfig.GRID_RADIUS_IN_HEX;
         let id = 0;
 
         for (let q = -R; q <= R; q++) {
@@ -40,7 +52,6 @@ export class GridGenerator {
     async populateWords(
         cellsMap: Map<string, Cell>,
         emitter: CellHashEmitter,
-        wordCount: number,
         wordSet: Set<string>
     ): Promise<void> {
         const wordBank = await fetch("../wordBank.json").then(response => response.json());
@@ -48,7 +59,7 @@ export class GridGenerator {
         let currentWordHash = emitter.emitFirst()!;
         let neighbors:[string, Cell][] = [];
 
-        for (let i = 0; i < wordCount; i++) {
+        for (let i = 0; i < this.locationCount.WORD_COUNT; i++) {
             const wordCell:Cell = cellsMap.get(currentWordHash)!;
 
             wordSet.add(currentWordHash);
@@ -57,7 +68,7 @@ export class GridGenerator {
             wordCell.getLocation()
                 .setWord(this.pickRandomWord(wordBank, wordSet, cellsMap));
 
-            if(i < wordCount - 1) {
+            if(i < this.locationCount.WORD_COUNT - 1) {
                 currentWordHash = this.updateNeighborsAndPickNextWordCell(
                     neighbors,
                     wordSet,
@@ -212,7 +223,7 @@ export class GridGenerator {
             this.distance(cell, cellsMap.get(hash)!) < GAME_CONFIG.GOOD_LOCATION_MIN_DISTANCE);
 
         // If all words are too far (distance >= 4), the location is not valid
-        if (isValid && goodSet.size === BASIC_LOCATION_COUNT.TREASURE_COUNT + 1) {
+        if (isValid && goodSet.size === this.locationCount.TREASURE_COUNT + 1) {
             const allWordsAreTooFar = Array.from(wordSet).every(hash =>
                 this.distance(cell, cellsMap.get(hash)!) >= 4
             );
@@ -242,11 +253,11 @@ export class GridGenerator {
 
             try {
                 // Place words
-                await this.populateWords(cellsMap, emitter, BASIC_LOCATION_COUNT.WORD_COUNT, wordSet);
+                await this.populateWords(cellsMap, emitter, wordSet);
 
                 // Place good locations
                 let tries = 0;
-                while (goodSet.size < BASIC_LOCATION_COUNT.GOOD_TOTAL) {
+                while (goodSet.size < this.locationCount.GOOD_TOTAL) {
                     const hash = emitter.emit();
                     if (!hash) break;
                     const cell:Cell = cellsMap.get(hash)!;
@@ -265,7 +276,7 @@ export class GridGenerator {
                 this.populateBadLocations(emitter, goodSet, wordSet, badSet, cellsMap);
                 /*
                 // Place bad locations
-                while (badSet.size < BASIC_LOCATION_COUNT.BAD_TOTAL) {
+                while (badSet.size < this.locationCount.BAD_TOTAL) {
                     const hash = emitter.emit();
                     if (!hash) break;
 
@@ -289,7 +300,7 @@ export class GridGenerator {
                     cellsMap
                 );*/
 
-               if (goodSet.size < BASIC_LOCATION_COUNT.GOOD_TOTAL) {
+               if (goodSet.size < this.locationCount.GOOD_TOTAL) {
                 continue;
                }
                 return cellsMap.values();
@@ -346,7 +357,7 @@ export class GridGenerator {
             })
         );
 
-        while (badSet.size < BASIC_LOCATION_COUNT.BAD_TOTAL) {
+        while (badSet.size < this.locationCount.BAD_TOTAL) {
             const hash = emitter.emitWithWeight(availableHashesWithProbability);
             if (!hash) break;
 
@@ -359,11 +370,11 @@ export class GridGenerator {
 
     private assignGoodLocationType(cell: Cell, count: number): void {
         const location = cell.getLocation();
-        if (count <= BASIC_LOCATION_COUNT.TREASURE_COUNT) {
+        if (count <= this.locationCount.TREASURE_COUNT) {
             location.setType(LocationType.TREASURE);
-        } else if (count <= BASIC_LOCATION_COUNT.TREASURE_COUNT + BASIC_LOCATION_COUNT.WATER_COUNT) {
+        } else if (count <= this.locationCount.TREASURE_COUNT + this.locationCount.WATER_COUNT) {
             location.setType(LocationType.WATER);
-        } else if (count <= BASIC_LOCATION_COUNT.TREASURE_COUNT + BASIC_LOCATION_COUNT.WATER_COUNT + BASIC_LOCATION_COUNT.AMULET_COUNT) {
+        } else if (count <= this.locationCount.TREASURE_COUNT + this.locationCount.WATER_COUNT + this.locationCount.AMULET_COUNT) {
             location.setType(LocationType.AMULET);
         } else {
             location.setType(LocationType.EXIT);
@@ -372,7 +383,7 @@ export class GridGenerator {
 
     private assignBadLocationType(cell: Cell, count: number): void {
         const location = cell.getLocation();
-        if (count <= BASIC_LOCATION_COUNT.CURSE_COUNT) {
+        if (count <= this.locationCount.CURSE_COUNT) {
             location.setType(LocationType.CURSE);
         } else {
             location.setType(LocationType.TRAP);
