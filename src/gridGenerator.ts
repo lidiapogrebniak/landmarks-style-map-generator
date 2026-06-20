@@ -20,7 +20,7 @@ export class GridGenerator {
         this.locationCount = lCount;
     }
 
-    generateCellsMap(): Map<string, Cell> {
+    generateEmptyCellsMap(): Map<string, Cell> {
         const cellsMap = new Map<string, Cell>();
         const R = this.gameConfig.GRID_RADIUS_IN_HEX;
         let id = 0;
@@ -122,6 +122,7 @@ export class GridGenerator {
         cellsMap.forEach(cell => cell.cleanLocation());
     }
 
+    //TBD
     bfsWhichGoodLocationsReachable(
         cellsMap: Map<string, Cell>,
         starts: [string, Cell][]
@@ -171,6 +172,7 @@ export class GridGenerator {
         return neighbors;
     }
 
+    //TBD
     findCloserFreeCell(
         start: [string, Cell],
         target: Cell,
@@ -200,6 +202,7 @@ export class GridGenerator {
         return betterNeighbor;
       }
 
+      //TBD
     moveLocationsTowardTarget(
         nonWordNotEmptylocations: [string, Cell][],
         target: Cell,
@@ -219,6 +222,8 @@ export class GridGenerator {
         goodSet: Set<string>,
         wordSet:Set<string>
     ): boolean {
+        // current cell is not closer to any other good locations or words
+        // then GOOD_LOCATION_MIN_DISTANCE
         let isValid = ![...goodSet, ...wordSet].some(hash =>
             this.distance(cell, cellsMap.get(hash)!) < GAME_CONFIG.GOOD_LOCATION_MIN_DISTANCE);
 
@@ -236,7 +241,7 @@ export class GridGenerator {
     }
 
     async generateCellsWithLocations(): Promise<Iterator<Cell>> {
-        const cellsMap = this.generateCellsMap();
+        const cellsMap = this.generateEmptyCellsMap();
         const cellsHashes = Array.from(cellsMap.keys());
         const emitter = new CellHashEmitter(cellsHashes);
 
@@ -274,31 +279,6 @@ export class GridGenerator {
                 }
 
                 this.populateBadLocations(emitter, goodSet, wordSet, badSet, cellsMap);
-                /*
-                // Place bad locations
-                while (badSet.size < this.locationCount.BAD_TOTAL) {
-                    const hash = emitter.emit();
-                    if (!hash) break;
-
-                    badSet.add(hash);
-                    this.assignBadLocationType(cellsMap.get(hash)!, badSet.size);
-                }
-
-                // Validate reachability
-                if (!this.isAllGoodLocationsReachable(cellsMap, wordSet, goodSet)) {
-                    continue;
-                }
-
-                // Move closer to words all non-word, non-empty locations
-                const nonWordNotEmptylocations = Array.from(cellsMap.entries())
-                    .filter(([hash, cell]) =>
-                        !wordSet.has(hash) && !cell.isLocationEmpty());
-
-                this.moveLocationsTowardTarget(
-                    nonWordNotEmptylocations,
-                    cellsMap.get(wordSet.values().next().value!)!,
-                    cellsMap
-                );*/
 
                if (goodSet.size < this.locationCount.GOOD_TOTAL) {
                 continue;
@@ -390,6 +370,7 @@ export class GridGenerator {
         }
     }
 
+    //TBD
     private isAllGoodLocationsReachable(cellsMap: Map<string, Cell>, wordSet: Set<string>, goodSet: Set<string>): boolean {
         const starts = Array.from(wordSet).map(h => [h, cellsMap.get(h)!] as [string, Cell]);
         if (starts.length === 0) {
