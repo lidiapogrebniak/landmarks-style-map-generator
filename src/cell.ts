@@ -65,4 +65,8 @@ export class Cell {
     toString(): string {
         return `Cell(q:${this.q}, r:${this.r}, type:${this.location.getType()})`;
     }
+
+    getHash(): string {
+        return `${this.getQ()},${this.getR()}`;
+    }
 }
