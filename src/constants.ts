@@ -104,5 +104,5 @@ export interface GameConfig {
 export const GAME_CONFIG: GameConfig = {
     GRID_RADIUS_IN_HEX: 3,
     HEX_RADIUS_IN_PIXEL: 48,
-    GOOD_LOCATION_MIN_DISTANCE: 1,
+    GOOD_LOCATION_MIN_DISTANCE: 2,
 } as const;
