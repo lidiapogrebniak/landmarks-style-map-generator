@@ -46,22 +46,22 @@
 
   <script type="module">
 
-import { GridGenerator } from './dist/gridGenerator.js';
-import { GAME_CONFIG, LOCATION_IMAGES, LocationType, BasicLocationCount, AdvancedLocationCount } from './dist/constants.js';
+import { BoardGenerator } from './dist/boardGenerator.js';
+import { LocationType } from './dist/location/locationType.js';
+import { BasicLocationCount, AdvancedLocationCount } from './dist/locationCountConfig.js';
+import { GAME_CONFIG } from './dist/gameConfig.js';
+import { LOCATION_IMAGES } from './dist/location/locationImages.js';
+
     // --- geometry helpers (pointy-top axial) ---
     const W = Math.sqrt(3) * GAME_CONFIG.HEX_RADIUS_IN_PIXEL; // width of a single hex
     const H = 2 * GAME_CONFIG.HEX_RADIUS_IN_PIXEL;            // height of a single hex
     const VERT = 3/4 * H;          // vertical step
 
-    // --- Utility ---
-    function randInt(n){return Math.floor(Math.random()*n)}
-    function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=randInt(i+1);[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
-    function parseLines(text){return text.split('\n').map(s=>s.trim()).filter(Boolean)}
-
     // Elements
 
     const complexityInput = document.querySelector('input[name="complexity"]:checked');
 
+    const words = await loadWords();
     const mapContainer = document.getElementById('hexGrid')
     const generateBtn = document.getElementById('generateBtn')
 
@@ -98,11 +98,26 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType, BasicLocationCount, Advance
         return element;
     };
 
-    async function generateMap() {
+    async function loadWords() {
+      return fetch(GAME_CONFIG.WORDS_FILE_PATH)
+        .then(response => response.json())
+        .then(data => {
+          if (!data.words || !Array.isArray(data.words)) {
+            throw new Error('Invalid words data format');
+          }
+          return data.words;
+        })
+        .catch(error => {
+          console.error('Error loading words:', error);
+          return [];
+        });
+    }
+
+    function generateMap(words) {
       const complexityValue = document.querySelector('input[name="complexity"]:checked').value;
       const complexity = complexityValue === 'advanced' ? new AdvancedLocationCount() : new BasicLocationCount();
-      const gridGenerator = new GridGenerator(GAME_CONFIG, complexity);
-      const cells = await gridGenerator.generateCellsWithLocations();
+      const boardGenerator = new BoardGenerator(GAME_CONFIG, complexity, words);
+      const cells = boardGenerator.generateBoard();
 
       try {
         renderGrid(cells);
@@ -126,10 +141,10 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType, BasicLocationCount, Advance
           'class':'hex'
         });
 
-        let textContent = `${c.getLocation().getType()}`;
-        if (c.getLocation().isWord()) {
+        let textContent = `${c.getLocation()}`;
+        if (!c.isLocationEmpty && c.getLocation().isWord) {
           poly.classList.add('word-hex');
-          const word = c.getLocation().getWord();
+          const word = c.getLocation().word;
           textContent = word;
           if (words) {
             words += ' - ' + word;
@@ -158,8 +173,8 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType, BasicLocationCount, Advance
 
         g.appendChild(title);
 
-        if (c.getLocation().getType() !== LocationType.EMPTY
-          && c.getLocation().getType() !== LocationType.WORD) {
+        if (!c.isLocationEmpty
+          && c.locationType !== LocationType.WORD) {
           const location = createSVGElement('image', {
             'width': H,
             'height': W,
@@ -167,7 +182,7 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType, BasicLocationCount, Advance
             'y': y - W/2
           });
 
-          location.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', LOCATION_IMAGES[c.getLocation().getType()]);
+          location.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', LOCATION_IMAGES[c.locationType]);
 
           g.appendChild(location);
         }
@@ -186,7 +201,9 @@ import { GAME_CONFIG, LOCATION_IMAGES, LocationType, BasicLocationCount, Advance
     }
 
     // --- Buttons ---
-    generateBtn.addEventListener('click', generateMap)
+    generateBtn.addEventListener('click', () => {
+      generateMap(words);
+    });
 
   </script>
 </body>

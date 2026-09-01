@@ -3,15 +3,16 @@ import {
   GAME_CONFIG,
   LocationType,
   GameConfig,
-} from "./constants.js";
-import { Location } from "./location.js";
+} from "./gameConfig.js";
+import { Location } from "./location/location.js";
 import { Cell } from "./cell.js";
 import { CellHashEmitter } from "./cellHashEmitter.js";
+import { Grid } from "./grid.js";
 
 export class GridGenerator {
   private gameConfig: GameConfig;
   private locationCount: LocationCount;
-  private cellsMap: Map<string, Cell> = new Map();
+  private grid: Grid;
   private emitter: CellHashEmitter = new CellHashEmitter([]);
 
   constructor(
@@ -20,22 +21,7 @@ export class GridGenerator {
   ) {
     this.gameConfig = gConfig;
     this.locationCount = lCount;
-  }
-
-  generateEmptyCellsMap(): Map<string, Cell> {
-    const R = this.gameConfig.GRID_RADIUS_IN_HEX;
-    let id = 0;
-
-    for (let q = -R; q <= R; q++) {
-      const r1 = Math.max(-R, -q - R);
-      const r2 = Math.min(R, -q + R);
-      for (let r = r1; r <= r2; r++) {
-        this.cellsMap.set(this.getLocationHash(q, r), new Cell(id, q, r));
-        id++;
-      }
-    }
-
-    return this.cellsMap;
+    this.grid = new Grid(this.gameConfig);
   }
 
   distance(cellA: Cell, cellB: Cell): number {
@@ -45,10 +31,6 @@ export class GridGenerator {
         Math.abs(cellA.getS() - cellB.getS())) /
       2
     );
-  }
-
-  getLocationHash(q: number, r: number): string {
-    return `${q},${r}`;
   }
 
   async populateWords(): Promise<Set<string>> {
@@ -116,10 +98,6 @@ export class GridGenerator {
     }
   }
 
-  cleanCellsLocations(): void {
-    this.cellsMap.forEach((cell) => cell.cleanLocation());
-  }
-
   //TBD
   bfsWhichGoodLocationsReachable(
     cellsMap: Map<string, Cell>,
@@ -179,46 +157,6 @@ export class GridGenerator {
     return neighbors;
   }
 
-  //TBD
-  findCloserFreeCell(
-    start: [string, Cell],
-    target: Cell,
-  ): [string, Cell] | null {
-    let best: [string, Cell] | null = null;
-
-    let currentDist = this.distance(start[1], target);
-
-    const neighbors = this.getNeighbors(start[1].getQ(), start[1].getR());
-
-    let betterNeighbor: [string, Cell] | null = null;
-    for (const neighbor of neighbors) {
-      if (neighbor.isLocationEmpty()) {
-        const neighborDistance = this.distance(neighbor, target);
-        if (neighborDistance < currentDist) {
-          const neighborHash = neighbor.getHash();
-          betterNeighbor = [neighborHash, neighbor];
-          currentDist = neighborDistance;
-        }
-      }
-    }
-
-    return betterNeighbor;
-  }
-
-  //TBD
-  moveLocationsTowardTarget(
-    nonWordNotEmptylocations: [string, Cell][],
-    target: Cell,
-  ): void {
-    for (const loc of nonWordNotEmptylocations) {
-      const newLoc = this.findCloserFreeCell(loc, target);
-      if (newLoc) {
-        newLoc[1].setLocation(loc[1].getLocation());
-        loc[1].cleanLocation();
-      }
-    }
-  }
-
   isGoodLocationValid(
     cell: Cell,
     goodSet: Set<string>,
@@ -227,9 +165,7 @@ export class GridGenerator {
     // current cell is not closer to any other good locations or words
     // then GOOD_LOCATION_MIN_DISTANCE
     let isValid = ![...goodSet, ...wordSet].some(
-      (hash) =>
-        this.distance(cell, this.cellsMap.get(hash)!) <
-        GAME_CONFIG.GOOD_LOCATION_MIN_DISTANCE,
+      (hash) => this.distance(cell, this.cellsMap.get(hash)!) < 3, //GAME_CONFIG.GOOD_LOCATION_MIN_DISTANCE,
     );
 
     // If all words are too far (distance >= 4), the location is not valid

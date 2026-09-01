@@ -1,72 +1,51 @@
-import { Location } from './location.js';
-import { LocationType } from './constants.js';
+import { Location } from "./location/location.js";
+import { LocationType } from "./location/locationType.js";
 
-interface Coordinates {
-    q: number;
-    r: number;
-    s: number;
+export class HexCoordinates {
+  readonly q: number;
+  readonly r: number;
+
+  get s(): number {
+    return -this.q - this.r;
+  }
+
+  constructor(q: number, r: number) {
+    this.q = q;
+    this.r = r;
+  }
 }
 
-export class Cell {
-    private id: number;
-    private q: number;
-    private r: number;
-    private s: number;
-    private location: Location;
+export class Cell extends HexCoordinates {
+  location: Location | null = null;
 
-    constructor(id: number, q: number, r: number) {
-        this.id = id;        // unique identifier for the cell
-        this.q = q;          // q coordinate in hexagonal grid
-        this.r = r;          // r coordinate in hexagonal grid
-        this.s = -q - r;     // s coordinate (computed)
-        this.location = new Location(LocationType.EMPTY);
-    }
+  constructor(q: number, r: number) {
+    super(q, r);
+  }
 
-    getCoordinates(): Coordinates {
-        return {
-            q: this.q,
-            r: this.r,
-            s: this.s
-        };
-    }
+  get locationType(): LocationType | null {
+    return this.location?.type ?? null;
+  }
 
-    getQ(): number {
-        return this.q;
-    }
+  getLocation(): Location | null {
+    return this.location;
+  }
 
-    getR(): number {
-        return this.r;
-    }
+  setLocation(location: Location): void {
+    this.location = location;
+  }
 
-    getS(): number {
-        return this.s;
-    }
+  get isLocationEmpty(): boolean {
+    return !this.location;
+  }
 
-    getLocation(): Location {
-        return this.location;
-    }
+  cleanLocation(): void {
+    this.location = null;
+  }
 
-    setLocation(location: Location): void {
-        if (location instanceof Location) {
-            this.location = location;
-        } else {
-            throw new Error('Invalid location type');
-        }
+  override toString(): string {
+    if (this.location) {
+      return `Cell(q:${this.q}, r:${this.r}, type:${this.locationType})`;
     }
-
-    isLocationEmpty(): boolean {
-        return this.location.getType() === LocationType.EMPTY;
-    }
-
-    cleanLocation(): void {
-        this.location = new Location(LocationType.EMPTY);
-    }
-
-    toString(): string {
-        return `Cell(q:${this.q}, r:${this.r}, type:${this.location.getType()})`;
-    }
-
-    getHash(): string {
-        return `${this.getQ()},${this.getR()}`;
-    }
+    return `Cell(q:${this.q}, r:${this.r})`;
+  }
 }
