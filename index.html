@@ -47,15 +47,11 @@
   <script type="module">
 
 import { BoardGenerator } from './dist/boardGenerator.js';
-import { LocationType } from './dist/location/locationType.js';
-import { BasicLocationCount, AdvancedLocationCount } from './dist/locationCountConfig.js';
+import { SvgRenderer } from './dist/render/svgRenderer.js';
 import { GAME_CONFIG } from './dist/gameConfig.js';
+import { BasicLocationCount, AdvancedLocationCount } from './dist/locationCountConfig.js';
 import { LOCATION_IMAGES } from './dist/location/locationImages.js';
 
-    // --- geometry helpers (pointy-top axial) ---
-    const W = Math.sqrt(3) * GAME_CONFIG.HEX_RADIUS_IN_PIXEL; // width of a single hex
-    const H = 2 * GAME_CONFIG.HEX_RADIUS_IN_PIXEL;            // height of a single hex
-    const VERT = 3/4 * H;          // vertical step
 
     // Elements
 
@@ -71,32 +67,6 @@ import { LOCATION_IMAGES } from './dist/location/locationImages.js';
     const noneGeneratedText = document.getElementById('noneGeneratedText');
     const svg = document.getElementById('hexmap');
 
-    function axialToPixel(q, r) {
-      const x = 3./2 * q * GAME_CONFIG.HEX_RADIUS_IN_PIXEL  + 300; // center near middle
-      const y = W * (1./2 * q + r) + 300;
-      return {x, y};
-    }
-
-    function hexPath(cx, cy) {
-      const pts = [];
-      for (let i = 0; i < 6; i++){
-        const angle = Math.PI/180 * (60 * i - 30);
-        const x = cx + GAME_CONFIG.HEX_RADIUS_IN_PIXEL * Math.sin(angle);
-        const y = cy + GAME_CONFIG.HEX_RADIUS_IN_PIXEL * Math.cos(angle);
-        pts.push([x,y]);
-      }
-      return 'M' + pts.map(p => p.join(',')).join(' L ') + ' Z';
-    }
-
-
-    export const createSVGElement = (type, attributes = {}) => {
-        const element = document.createElementNS('http://www.w3.org/2000/svg', type);
-        Object.entries(attributes).forEach(([key, value]) => {
-            element.setAttribute(key, value);
-        });
-
-        return element;
-    };
 
     async function loadWords() {
       return fetch(GAME_CONFIG.WORDS_FILE_PATH)
@@ -118,87 +88,17 @@ import { LOCATION_IMAGES } from './dist/location/locationImages.js';
       const complexity = complexityValue === 'advanced' ? new AdvancedLocationCount() : new BasicLocationCount();
       const boardGenerator = new BoardGenerator(GAME_CONFIG, complexity, words);
       const cells = boardGenerator.generateBoard();
+      const svgRenderer = new SvgRenderer(svg, GAME_CONFIG.HEX_RADIUS_IN_PIXEL, LOCATION_IMAGES);
+
+      noneGeneratedText.style.display = "none";
 
       try {
-        renderGrid(cells);
+        svgRenderer.renderGrid(cells);
       } catch (error) {
         console.error('Error rendering grid:', error);
       }
     }
-    // --- draw ---
-    function renderGrid(cells){
-      noneGeneratedText.style.display = 'none';
-      svg.style.display = 'block';
-      svg.innerHTML = '';
-      let words = '';
 
-      for(const c of cells){
-        const {x,y} = axialToPixel(c.q,c.r);
-        const g = createSVGElement ('g', {'filter':'url(#soft)'});
-
-        const poly = createSVGElement ('path',{
-          'd': hexPath(x,y),
-          'class':'hex'
-        });
-
-        let textContent = `${c.getLocation()}`;
-        if (!c.isLocationEmpty && c.getLocation().isWord) {
-          poly.classList.add('word-hex');
-          const word = c.getLocation().word;
-          textContent = word;
-          if (words) {
-            words += ' - ' + word;
-          } else {
-            words = word;
-          }
-
-          const wordText = createSVGElement('text', {
-            'x': x,
-            'y': y + 5,
-            'text-anchor': 'middle',
-            'class': 'word-label',
-            'font-size': '26px'
-          });
-
-          wordText.appendChild(document.createTextNode(word.substring(0, 3)));
-          g.appendChild(wordText);
-        }
-        g.appendChild(poly);
-
-        // tooltip title
-        const title = createSVGElement('title', {
-          textContent: textContent
-        });
-        title.appendChild(document.createTextNode(textContent));
-
-        g.appendChild(title);
-
-        if (!c.isLocationEmpty
-          && c.locationType !== LocationType.WORD) {
-          const location = createSVGElement('image', {
-            'width': H,
-            'height': W,
-            'x': x - H/2,
-            'y': y - W/2
-          });
-
-          location.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', LOCATION_IMAGES[c.locationType]);
-
-          g.appendChild(location);
-        }
-        svg.appendChild(g);
-      }
-
-      const textElement = createSVGElement('text', {
-        'x': 10,
-        'y': 610,
-        'class': 'words-label'
-      });
-
-      textElement.appendChild(document.createTextNode(`Стартовые слова: ${words}`));
-
-      svg.appendChild(textElement);
-    }
 
     // --- Buttons ---
     generateBtn.addEventListener('click', () => {

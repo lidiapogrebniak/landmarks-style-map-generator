@@ -44,5 +44,5 @@
     "checkJs": false
   },
   "include": ["src/**/*"],
-  "exclude": ["src/gridGenerator.ts", "src/cellHashEmitter.ts"]
+  "exclude": []
 }
