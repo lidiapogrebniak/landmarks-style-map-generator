@@ -43,68 +43,7 @@
 
   </div>
 
+  <script type="module" src="./dist/landmarks.js"></script>
 
-  <script type="module">
-
-import { BoardGenerator } from './dist/boardGenerator.js';
-import { SvgRenderer } from './dist/render/svgRenderer.js';
-import { GAME_CONFIG } from './dist/gameConfig.js';
-import { BasicLocationCount, AdvancedLocationCount } from './dist/locationCountConfig.js';
-import { LOCATION_IMAGES } from './dist/location/locationImages.js';
-
-
-    // Elements
-
-    const complexityInput = document.querySelector('input[name="complexity"]:checked');
-
-    const words = await loadWords();
-    const mapContainer = document.getElementById('hexGrid')
-    const generateBtn = document.getElementById('generateBtn')
-
-    const allowAdj = document.getElementById('allowAdjacency')
-    const avoidSym = document.getElementById('avoidSymmetry')
-
-    const noneGeneratedText = document.getElementById('noneGeneratedText');
-    const svg = document.getElementById('hexmap');
-
-
-    async function loadWords() {
-      return fetch(GAME_CONFIG.WORDS_FILE_PATH)
-        .then(response => response.json())
-        .then(data => {
-          if (!data.words || !Array.isArray(data.words)) {
-            throw new Error('Invalid words data format');
-          }
-          return data.words;
-        })
-        .catch(error => {
-          console.error('Error loading words:', error);
-          return [];
-        });
-    }
-
-    function generateMap(words) {
-      const complexityValue = document.querySelector('input[name="complexity"]:checked').value;
-      const complexity = complexityValue === 'advanced' ? new AdvancedLocationCount() : new BasicLocationCount();
-      const boardGenerator = new BoardGenerator(GAME_CONFIG, complexity, words);
-      const cells = boardGenerator.generateBoard();
-      const svgRenderer = new SvgRenderer(svg, GAME_CONFIG.HEX_RADIUS_IN_PIXEL, LOCATION_IMAGES);
-
-      noneGeneratedText.style.display = "none";
-
-      try {
-        svgRenderer.renderGrid(cells);
-      } catch (error) {
-        console.error('Error rendering grid:', error);
-      }
-    }
-
-
-    // --- Buttons ---
-    generateBtn.addEventListener('click', () => {
-      generateMap(words);
-    });
-
-  </script>
 </body>
 </html>

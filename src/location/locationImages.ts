@@ -1,6 +1,7 @@
 import { LocationType } from "./locationType.js";
+export type LocationTypeWithImage = Exclude<LocationType, LocationType.WORD>;
 
-export const LOCATION_IMAGES: Partial<Record<LocationType, string>> = {
+export const LOCATION_IMAGES: Record<LocationTypeWithImage, string> = {
   [LocationType.TREASURE]: "./images/treasure.png",
   [LocationType.WATER]: "./images/water.png",
   [LocationType.AMULET]: "./images/amulet.png",

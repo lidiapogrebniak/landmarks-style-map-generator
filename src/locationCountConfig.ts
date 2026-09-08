@@ -53,7 +53,7 @@ export class BasicLocationCount extends BaseLocationCount {
     return 4;
   }
 
-  private constructor() {
+  constructor() {
     super();
   }
 }
@@ -72,7 +72,7 @@ export class AdvancedLocationCount extends BaseLocationCount {
     return 6;
   }
 
-  private constructor() {
+  constructor() {
     super();
   }
 }

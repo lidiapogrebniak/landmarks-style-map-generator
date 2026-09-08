@@ -1,4 +1,5 @@
 import { Cell } from "../cell";
+import { LocationTypeWithImage } from "../location/locationImages";
 import { LocationType } from "../location/locationType.js";
 
 export class SvgRenderer {
@@ -8,12 +9,12 @@ export class SvgRenderer {
 
   private readonly svg: SVGSVGElement;
   private readonly hexRadiusInPixel: number;
-  private readonly locationImages: Record<LocationType, string>;
+  private readonly locationImages: Record<LocationTypeWithImage, string>;
 
   constructor(
     svg: SVGSVGElement,
     hexRadiusInPixel: number,
-    locationImages: Record<LocationType, string>,
+    locationImages: Record<LocationTypeWithImage, string>,
   ) {
     this.svg = svg;
     this.hexRadiusInPixel = hexRadiusInPixel;
